@@ -2,7 +2,8 @@
 
 -import(expander, [expand/1]).
 
--export([corrector/0]).
+-export([correct/1, init/1, loop_correct/1]).
+
 
 line_token_to_tuple([_|[H2|[H3|[]]]]) ->
   {string:to_lower(H2), element(1,string:to_integer(re:replace(H3,"\n","",[{return,list}])))}.
@@ -18,7 +19,6 @@ load_lines(FD) ->
     eof  -> [];
     Line -> [line_token_to_tuple(string:tokens(Line, "\t"))] ++ load_lines(FD)
   end.
-
 
 
 find_most_common_aux(_, [], SolutionWord, _) ->
@@ -38,13 +38,23 @@ find_most_common(Dict, Words) ->
 
 loop_correct(Dict) ->
     receive
-      {correct, Word} ->
+      {correct, Sender, Word} ->
         PossibleWords = expander:expand(Word),
-        X = "Did you mean '"++find_most_common(Dict,PossibleWords) ++ "' ?",
-        io:format("~p~n",[X]),
+        Sender ! {found, find_most_common(Dict,PossibleWords)},
         loop_correct(Dict)
     end.
 
-corrector() ->
-  Dict = maps:from_list(load_file("word_frequency_10K.txt")),
-  loop_correct(Dict).
+init(DictionaryFile) ->
+  Dict = maps:from_list(load_file(DictionaryFile)),
+  Pid = spawn(?MODULE, loop_correct, [Dict]),
+  register(server, Pid).
+
+
+correct(Word) ->
+  io:format("~p~n",[self()]),
+  whereis(server) ! {correct, self(), Word},
+  receive
+    {found, CorrectedWord} ->
+      X = "Did you mean '"++ CorrectedWord ++ "' ?",
+      io:format("~p~n",[X])
+  end.
