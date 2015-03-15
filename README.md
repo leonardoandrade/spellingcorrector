@@ -8,13 +8,16 @@ Word requency list taken from [wiktionary.org](http://en.wiktionary.org/wiki/Wik
 ##Usage
 
 ```bash
-$> erl
-1>  c(corrector).          
-{ok,corrector}          
-2> corrector: init("word_frequency_30k.txt").
-true
-3>  corrector: correct("banxna").             
-"Did you mean 'banana' ?"
-ok
+$> ./run.sh
+➜  spellingcorrector git:(master) ✗ ./run.sh
+loading dictionary...done
+> banxana
+did you mean "banana" ?
+> banana
+word '"banana"' is correct
 ```
+
+##TODO
+ * optimize second expansion
+ * implement character replacement based on soundex
 
