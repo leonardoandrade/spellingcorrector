@@ -5,8 +5,8 @@
 alphabet_en() ->
   "abcdefghijklmnopqrstuvxz".
 
-alphabet_de() ->
-  "abcdefghijklmnopqrstuvxzäöüß".
+%alphabet_de() ->
+%  "abcdefghijklmnopqrstuvxzäöüß".
 
 %remove letters from word
 remove_letters(L, _, []) ->
@@ -33,8 +33,8 @@ replace_letters(Word) ->
   lists:append([add_letters(X) || X <- D]).
 
 %just for printing
-print_list([]) -> true;
-print_list([H|T]) -> io:format("--> ~p~n", [H]), print_list(T).
+%print_list([]) -> true;
+%print_list([H|T]) -> io:format("--> ~p~n", [H]), print_list(T).
 
 expand(Word) ->
   expand(Word, expand_once).
