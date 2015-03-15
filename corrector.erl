@@ -38,23 +38,43 @@ find_most_common(Dict, Words) ->
 
 loop_correct(Dict) ->
     receive
-      {correct, Sender, Word} ->
-        PossibleWords = expander:expand(Word),
-        Sender ! {found, find_most_common(Dict,PossibleWords)},
-        loop_correct(Dict)
+      {correct, Sender, Word} -> 
+        case maps:get(Word, Dict, -1) of 
+          X when X =/= -1  -> 
+           Sender ! {found, Word},
+            loop_correct(Dict);
+          _ ->
+            
+        
+          PossibleWords = expander:expand(Word, expand_once), % get all the possible variations from expander
+          CorrectedWord = find_most_common(Dict,PossibleWords), % find most common word as a solution
+
+          case ((length(CorrectedWord) == 0) and (length(Word) < 7)) of
+            true ->
+              PossibleWords2 = expander:expand(Word, expand_twice),
+              CorrectedWord2 = find_most_common(Dict,PossibleWords2),
+              Sender ! {found, CorrectedWord2};
+            false ->
+              Sender ! {found, CorrectedWord} 
+            end,
+          loop_correct(Dict)
+        end
     end.
 
 init(DictionaryFile) ->
   Dict = maps:from_list(load_file(DictionaryFile)),
   Pid = spawn(?MODULE, loop_correct, [Dict]),
-  register(server, Pid).
+  register(spelling_corrector_server, Pid).
 
+correct([]) -> [];
 
 correct(Word) ->
-  io:format("~p~n",[self()]),
-  whereis(server) ! {correct, self(), Word},
-  receive
+  whereis(spelling_corrector_server) ! {correct, self(), Word},
+  receive    
     {found, CorrectedWord} ->
-      X = "Did you mean '"++ CorrectedWord ++ "' ?",
-      io:format("~p~n",[X])
+      CorrectedWord
   end.
+
+
+
+
