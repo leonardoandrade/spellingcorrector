@@ -8,8 +8,24 @@
 loop_input() ->
   Word = string:strip(io:get_line("> "),both,$.),
   WordTrimmed = re:replace(Word, "(^\\s+)|(\\s+$)", "", [global,{return,list}]),
-  io:format("~p~n",[WordTrimmed]),
-  corrector:correct(WordTrimmed),
+  case length(WordTrimmed) =:= 0 of 
+    true -> loop_input();
+    false -> 
+  
+
+  CorrectedWord = corrector:correct(WordTrimmed),
+  case (length(CorrectedWord) =:= 0) of 
+    true -> 
+      io:format("correction not found for ~p~n",[Word]);
+    false ->
+      case (CorrectedWord =:= WordTrimmed) of 
+        true ->
+          io:format("word '~p' is correct~n",[CorrectedWord]);
+        false -> 
+          io:format("did you mean ~p ?~n",[CorrectedWord])
+      end
+  end
+end,
   loop_input().
 
 main(_) ->
